@@ -304,7 +304,7 @@ Notification worker logs validated via stdout.
 
 ---
 
-# PoC Limitations
+# Notification-Worker's setup Limitations
 
 * Poll-based model (not event-driven)
 * `match_all` query (no filtering logic)
@@ -314,7 +314,7 @@ Notification worker logs validated via stdout.
 
 ---
 
-#  PoC Status
+#  Setup's Status
 
 * Elasticsearch deployed and stable
 * Employee API indexing integrated
