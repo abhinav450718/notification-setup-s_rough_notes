@@ -1,8 +1,8 @@
-#  Rough Notes "Notification Worker Integration with Elasticsearch"
+# Rough Notes "Notification Worker Integration with Elasticsearch"
 
 ---
 
-##  Objective
+## Objective
 
 Implement and validate an end-to-end notification system where employee records are indexed into Elasticsearch and consumed by a scheduled notification worker to send email alerts via SMTP.
 
@@ -10,15 +10,15 @@ This PoC demonstrates complete infrastructure provisioning, application integrat
 
 ---
 
-#  Architecture Overview
+# Architecture Overview
 
 <img width="472" height="258" alt="Architecture Diagram" src="https://github.com/user-attachments/assets/93f4a32b-94cc-4e0f-9ad7-d36a878b0dba" />
 
 ---
 
-#  Infrastructure Setup
+# Infrastructure Setup
 
-##  Elasticsearch Deployment
+## Elasticsearch Deployment
 
 * **Version:** 7.8.0
 * **Installation Path:** `/home/ubuntu/elasticsearch-7.8.0`
@@ -28,7 +28,7 @@ This PoC demonstrates complete infrastructure provisioning, application integrat
 
 ---
 
-##  systemd Service Configuration
+## systemd Service Configuration
 
 **Service File Location:**
 
@@ -46,7 +46,7 @@ This PoC demonstrates complete infrastructure provisioning, application integrat
 
 ---
 
-##  Service Management Commands
+## Service Management Commands
 
 ```bash
 sudo systemctl daemon-reload
@@ -57,7 +57,7 @@ sudo systemctl status elasticsearch
 
 ---
 
-##  Elasticsearch Validation
+## Elasticsearch Validation
 
 ```bash
 curl http://10.0.1.25:9200
@@ -68,7 +68,7 @@ Elasticsearch cluster reachable and index confirmed.
 
 ---
 
-#  Employee API Integration (Go Service)
+# Employee API Integration (Go Service)
 
 ### Modified File:
 
@@ -84,12 +84,12 @@ CreateEmployeeData()
 
 ---
 
-##  Logic Implemented
+## Logic Implemented
 
-After successful insertion into ScyllaDB:
+Upon receiving an employee creation request:
 
 * Initialized Elasticsearch client (`go-elasticsearch/v7`)
-* Indexed employee document into:
+* Indexed employee document directly into:
 
 ```
 employee-management
@@ -103,7 +103,7 @@ employee-management
 
 ---
 
-##  Dependency Installation
+## Dependency Installation
 
 ```bash
 go get github.com/elastic/go-elasticsearch/v7
@@ -118,9 +118,9 @@ employee-api.service (systemd)
 
 ---
 
-#  Manual Elasticsearch Validation (PoC Testing)
+# Manual Elasticsearch Validation (PoC Testing)
 
-##  Insert Test Employee Document
+## Insert Test Employee Document
 
 ```bash
 curl -X PUT "http://10.0.1.25:9200/employee-management/_doc/EMP001" \
@@ -134,11 +134,12 @@ curl -X PUT "http://10.0.1.25:9200/employee-management/_doc/EMP001" \
 This manually indexes a test employee record into Elasticsearch.
 
 <img width="1600" height="199" alt="image" src="https://github.com/user-attachments/assets/f948ac8f-98d7-4391-af51-918a642ad033" />
-<img width="1241" height="587" alt="image" src="https://github.com/user-attachments/assets/58752d0c-d8ab-41b6-b0b6-b186a2670613" />
+
+<img width="1191" height="504" alt="Email Screenshot 1" src="https://github.com/user-attachments/assets/0121b8b2-62b4-4361-99f9-bc43081f8292" />
 
 ---
 
-##  Fetch All Documents
+## Fetch All Documents
 
 ```bash
 curl -X GET "http://10.0.1.25:9200/employee-management/_search?pretty" \
@@ -149,6 +150,7 @@ curl -X GET "http://10.0.1.25:9200/employee-management/_search?pretty" \
     }
   }'
 ```
+
 <img width="1600" height="746" alt="image" src="https://github.com/user-attachments/assets/fdad9a00-acb3-46fd-bcc2-ff2c1a0f718c" />
 
 Confirms:
@@ -159,7 +161,7 @@ Confirms:
 
 ---
 
-#  Notification Worker Setup (Python Service)
+# Notification Worker Setup (Python Service)
 
 **Location:**
 
@@ -169,7 +171,7 @@ notification-worker/notification_api.py
 
 ---
 
-##  Execution Modes
+## Execution Modes
 
 * `external` → One-time execution
 * `scheduled` → Periodic polling
@@ -182,7 +184,7 @@ schedule.every(1).minutes.do(send_mail_to_all_users)
 
 ---
 
-##  Elasticsearch Query Used by Worker
+## Elasticsearch Query Used by Worker
 
 ```python
 index = "employee-management"
@@ -199,7 +201,7 @@ And triggers SMTP email delivery.
 
 ---
 
-#  SMTP Configuration
+# SMTP Configuration
 
 * **Provider:** Gmail
 * **Port:** 587
@@ -215,7 +217,7 @@ telnet smtp.gmail.com 587
 
 ---
 
-#  End-to-End Validation
+# End-to-End Validation
 
 ## Step 1 – Create Employee
 
@@ -227,7 +229,6 @@ POST request to:
 
 Result:
 
-* Record stored in ScyllaDB
 * Document indexed into Elasticsearch
 
 Validated via:
@@ -264,15 +265,15 @@ Email successfully received at the configured recipient address.
 * **Sender:** Configured SMTP account
 * **Timestamp:** Matches worker execution time
 
- **Screenshot Attached as Proof of Delivery**
+**Screenshot Attached as Proof of Delivery**
 
-<img width="1191" height="504" alt="Email Screenshot 1" src="https://github.com/user-attachments/assets/0121b8b2-62b4-4361-99f9-bc43081f8292" />
+<img width="1241" height="587" alt="image" src="https://github.com/user-attachments/assets/58752d0c-d8ab-41b6-b0b6-b186a2670613" />
 
 <img width="744" height="485" alt="Email Screenshot 2" src="https://github.com/user-attachments/assets/373d71d8-376d-467f-b218-b72673d9824b" />
 
 ---
 
-##  Validation Confirms
+## Validation Confirms
 
 * Successful Elasticsearch data retrieval
 * Proper SMTP transmission
@@ -281,7 +282,7 @@ Email successfully received at the configured recipient address.
 
 ---
 
-#  Observability & Logs
+# Observability & Logs
 
 Logs verified using:
 
@@ -294,7 +295,7 @@ Notification worker logs validated via stdout.
 
 ---
 
-#  Network & Security Configuration
+# Network & Security Configuration
 
 * Elasticsearch (9200) restricted to internal VPC access
 * SSH access restricted via Security Groups
@@ -303,7 +304,7 @@ Notification worker logs validated via stdout.
 
 ---
 
-#  PoC Limitations
+# PoC Limitations
 
 * Poll-based model (not event-driven)
 * `match_all` query (no filtering logic)
@@ -313,7 +314,7 @@ Notification worker logs validated via stdout.
 
 ---
 
-# 🔷 PoC Status
+#  PoC Status
 
 * Elasticsearch deployed and stable
 * Employee API indexing integrated
@@ -324,3 +325,4 @@ Notification worker logs validated via stdout.
 
 End-to-end notification flow successfully demonstrated.
 
+---
