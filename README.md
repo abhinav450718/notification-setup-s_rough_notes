@@ -234,7 +234,7 @@ Result:
 Validated via:
 
 ```bash
-curl http://<ES-IP>:9200/employee-management/_search?pretty
+curl http://10.0.1.25:9200/employee-management/_search?pretty
 ```
 
 ---
